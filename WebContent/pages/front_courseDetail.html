@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<title>课程详情</title>
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<link rel="stylesheet" href="iconfont/font_0/iconfont.css">
+		<link rel="stylesheet" href="css/style.css">
+		<style>
+			html,
+    body {
+        height: 100%;
+    }
+
+    body>.wrap-cc {
+        min-height: 100%;
+    }
+
+    .content-cc {
+        /* padding-bottom 等于 footer 的高度 */
+        padding-bottom: 80px;
+    }
+
+    .footer-cc {
+        width: 100%;
+        height: 80px;
+        /* margin-top 为 footer 高度的负值 */
+        margin-top: -80px;
+    }
+    </style>
+		<script src="js/jquery.min.js"></script>
+		<script src="js/bootstrap.min.js"></script>
+		<script src="js/template-web.js"></script>
+		<script>
+			$(function() {
+        init.isLogin();
+        init.loadData();
+        init.loginOut();
+		init.addComment();
+		
+
+        $(".title-ul>li").on('click', function() {
+            console.log($(this));
+            $(this).addClass('current').siblings().removeClass("current");
+        })
+
+        $('.addPraise').bind('click', function(){
+            alert('点赞成功');
+        });
+    });
+	
+	// console.log(sessionStorage.getItem('resourceId'));
+	let page;
+	let pages;
+    let init = {
+		   "loadData": function () {
+		    let resourceId = sessionStorage.getItem('resourceId');
+		    let parentdocument = sessionStorage.getItem('parentdocument');
+		    let courseTypeId=sessionStorage.getItem('courseTypeId');
+		    let url= "http://localhost:8080/netClass" + "/chapter/resourceDetail.do";
+		    let data={"id": resourceId};
+		    $.ajax({
+		        url: url,
+		        type: "POST",
+		        data: data,
+		        dataType: "json",
+		        success: function (data) {
+		            if (data.success) {
+		                if (data.obj.fileType == '1') {
+		                    $("#video-b").prop('src', `http://localhost:8080/netClass${data.obj.path}`);
+		                } else {
+		                    location.href=`http://localhost:8080/netClass/other/down.do?path=${data.obj.path}`;
+		                    $('#video').css('display','none');
+		                }
+						page=1;
+						init.loadComments();
+						init.loadRecommdcourse(courseTypeId);
+						
+		            } else {
+		                alert(data.msg);
+		            }
+		        }
+		    });
+		},
+        "loginOut": function () {
+            $('#loginOutBtn').click(function () {
+                let user = JSON.parse(sessionStorage.getItem('user'));
+                // console.log(user);
+                $.ajax({
+                    url: "http://localhost:8080/netClass" + "/user/loginOut.do",
+                    type: "POST",
+                    data: {
+                        "loginName": user.loginName
+                    },
+                    dataType: "json",
+                    success: function (data) {
+                        alert(data.msg);
+                        if (data.success) {
+                            sessionStorage.removeItem('user');
+                            location.href='front_index.html';
+                        }
+                    }
+
+                });
+            })
+        },
+        "isLogin": function () {
+            if (sessionStorage.getItem('user') != null) {
+                let user = JSON.parse(sessionStorage.getItem('user'));
+                $.ajax({
+                    url: "http://localhost:8080/netClass/user/check.do",
+                    type: "POST",
+                    data: {"loginName": user.loginName},
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.success) {
+                            // console.log($(".userinfo .user-nickname"));
+                            $(".userinfo .user-nickname").html(data.obj.nickname);
+
+                            $('#userSet .nickname').attr("value", data.obj.nickname);
+                            $('#userSet .email').attr("value", data.obj.email);
+                            $('#userSet .loginName').attr("value", data.obj.loginName);
+                            init.loadGoldPoints(user.id);
+                        }else {
+                            location.href='front_index.html';
+                        }
+                    }
+                });
+            } else {
+                location.href='front_index.html';
+            }
+        },
+        "loadGoldPoints": function (userId) {
+            $.ajax({
+                url: "http://localhost:8080/netClass/goldPoints/findByUserId.do",
+                type: "POST",
+                data: {"userId": userId},
+                dataType: "json",
+                success: function (data) {
+                    if (data.success) {
+                        // console.log(data);
+                        $(".user-gold").html(data.obj.goldCount);
+                        $(".user-point").html(data.obj.pointCount);
+                    } else {
+                        alert(data.msg);
+                    }
+                }
+            });
+        },
+       "loadComments": function () {
+		   let resourceId = sessionStorage.getItem('resourceId')+",";
+           $.ajax({
+               url: "http://localhost:8080/netClass/comment/findCommentByResourceIds.do",
+               type: "POST",
+               data: {"cids": resourceId,"page":page},
+               dataType: "json",
+               success: function (data) {
+                   if (data.success) {
+       				page=data.obj.pageNum+1;
+       				pages=data.obj.pages;
+       				let datas = {
+       				    list: data.obj.list,
+       				};
+					// console.log($("#comment"));
+                    $("#comment").append(template("commentTemplate", datas));
+       				$("#comment").append($(".load-more"));
+					$("#comment").show();
+					init.loadmore();
+       				init.iconzan();
+                   } else {
+                       alert(data.msg);
+                   }
+               }
+           });
+       },
+       "loadmore":function(){
+       	$(".load-more").click(function(){
+       		if(page<=pages){
+       			init.loadComments();
+       		}else{
+       			$(this).html("<span>-------我也是有底线的-------</span>");
+       		}
+       		
+       	});
+       },
+       "iconzan":function(){
+		$(".addzan").unbind("click");
+       	$(".addzan").click(function(){
+       		let user = JSON.parse(sessionStorage.getItem('user'));
+       		let cid=$(this).attr("cid");
+       		let t=$(this)
+       		  $.ajax({
+       		    url: "http://localhost:8080/netClass/comment/addZan.do",
+       		    type: "POST",
+       		    data: {"userId": user.id,"commentId":cid},
+       		    dataType: "json",
+       		    success: function (data) {
+       		        if (data.success) {
+       					let text=t.text();
+						console.log(text);
+       					t.html('<i class="icon iconfont icon-zan"></i>'+(parseInt(text)+1));
+       					// init.iconzan();
+       		        } else {
+						let text=t.text();
+						console.log(text);
+						t.html('<i class="icon iconfont icon-zan"></i>'+(parseInt(text)-1));
+						// init.iconzan();
+       		            // alert(data.msg);
+       		        }
+       		    }
+       		});
+       	});
+       },
+	   "addComment":function(){
+	   	$(".comment-area .btn-success").click(function(){
+			let context=$("#context").val();
+			if(context.trim()==''){
+				alert('发表评论不能为空');
+			}
+			if(context.trim()>200){
+				alert('发表评论太长');
+			}
+	   		let user = JSON.parse(sessionStorage.getItem('user'));
+			let resourceId = sessionStorage.getItem('resourceId');
+	   		let t=$(this);
+	   		  $.ajax({
+	   		    url: "http://localhost:8080/netClass/comment/addComment.do",
+	   		    type: "POST",
+	   		    data: {"userId": user.id,"resourceId":resourceId,"context":$("#context").val()},
+	   		    dataType: "json",
+	   		    success: function (data) {
+	   		        if (data.success) {
+						let datas = {
+						    i: data.obj,
+						};
+	   					$("#comment").prepend(template("commentTemplate1", datas));
+	   					$("#comment").append($(".load-more"));
+						// init.iconzan();
+	   		        } else {
+	   		            alert(data.msg);
+	   		        }
+	   		    }
+	   		});
+	   	});
+	   },
+		"loadRecommdcourse":function(courseTypeId){
+			$.ajax({
+			    url: "http://localhost:8080/netClass/course/findCourseByCourseTypeId.do",
+			    type: "POST",
+			    data: {"courseTypeId": courseTypeId},
+			    dataType: "json",
+			    success: function (data) {
+			        if (data.success) {
+						let datas = {
+						    list: data.obj,
+						};
+						$("#recommdcourse").html(template("courseTemplate", datas));
+						init.toCourse();
+			        } else {
+			            alert(data.msg);
+			        }
+			    }
+			});
+		},
+		 "toCourse": function () {
+			$('.course-id').click(function(){
+				let cid=$(this).attr('cid');
+				sessionStorage.setItem('courseId', cid);
+				let a = sessionStorage.getItem('courseId');
+				 $.ajax({
+				    url: "http://localhost:8080/netClass/course/updateClickNum.do",
+				    type: "POST",
+				    data: {"id": cid},
+				    dataType: "json",
+				    success: function (data) {
+				        if (data.success) {
+							location.href = 'front_course.html';
+				        } else {
+				            alert(data.msg);
+				        }
+				    }
+				});
+				
+			});
+		},
+	        "update": function () {
+	            $('#updateBtn').click(function () {
+					let loginName =$('#userSet .loginName').val();
+					let password =$('#userSet .password').val();
+					
+					if(password.trim()==''){
+					    alert("旧密码不能为空");
+					    return ;
+					}
+					if(!password.match(/^[0-9a-zA-Z_]{1,}$/)){
+					    alert("旧密码不正确");
+					    return ;
+					}
+					if(password.length>40){
+					    alert("旧密码不正确");
+					    return ;
+					}
+					let newPassword =$('#userSet .newPassword').val();
+					if(newPassword.trim()==''){
+					    alert("新密码不能为空");
+					    return ;
+					}
+					if(!newPassword.match(/^[0-9a-zA-Z_]{1,}$/)){
+					    alert("新密码含有特殊字符");
+					    return ;
+					}
+					if(newPassword.trim().length>40){
+					    alert("新密码太长");
+					    return ;
+					}
+					let rePassword =$('#userSet .rePassword').val();
+					if(!newPassword.trim()==rePassword.trim()){
+					    alert("两次密码不一样");
+					    return ;
+					}
+					let nickname =$('#userSet .nickname').val();
+					if(nickname.trim()==''){
+					    alert("昵称不能为空");
+					    return ;
+					}
+					if(nickname.trim().length<1||nickname.trim().length>60){
+					    alert("昵称不正确");
+					    return ;
+					}
+					let email =$('#userSet .email').val();
+					if(email.trim()==''){
+					    alert("邮箱不能为空");
+					    return ;
+					}
+					if(!email.trim().match(/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,})$/)){
+					    alert("邮箱不正确");
+					    return ;
+					}
+					if(email.trim().length>60){
+					    alert("邮箱不正确");
+					    return ;
+					}
+	                let user = JSON.parse(sessionStorage.getItem('user'));
+	                console.log($('#updateForm').serialize());
+	                $.ajax({
+	                    url: "http://localhost:8080/netClass" + "/user/update.do",
+	                    type: "POST",
+	                    data: $('#updateForm').serialize(),
+	                    dataType: "json",
+	                    success: function (data) {
+	                        alert(data.msg);
+	                        if (data.success) {
+	                            console.log(data.obj);
+	                            sessionStorage.setItem('user', JSON.stringify(data.obj));
+	                            $('#userInfo').text(data.obj.nickname);
+	                        }
+	                    }
+	
+	                });
+	            })
+	        }
+	   
+    }
+    </script>
+		<script id="goldPointsTemplate" type="text/html">
+			{{each list  i}}
+        <tr>
+            <td>{{i.id}}</td>
+            <td>
+                {{if i.pointCount == 0}}
+                {{i.goldCount}}
+                {{else}}
+                {{i.pointCount}}
+                {{/if}}
+            </td>
+            <td>{{if i.pointCount == 0}}
+                金币
+                {{else}}
+                积分
+                {{/if}}
+            </td>
+            <td>{{i.info}}</td>
+            <td>{{i.createDate}}</td>
+        </tr>
+        {{/each}}
+    </script>
+
+		<script id="commentTemplate" type="text/html">
+			{{each list  i}}
+				 <li>
+					<div class="row comment-area">
+						<div class="col-md-1"><img src="images/user.jpeg" alt="" class="img-circle " width="35" height="35"></div>
+						<div class="col-md-10 comment-info">
+							<div class="col-md-12">{{i.user.nickname}}</div>
+							<div class="col-md-12">{{i.context}}</div>
+							<div class="col-md-12">
+								<div>
+									时间：<span>{{i.createDate}}</span>
+								</div>
+								<div>
+									<span>举报</span>
+									<span class="addzan" cid="{{i.id}}"><i class="icon iconfont icon-zan"></i>{{i.praise.length}}</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</li>
+		      {{/each}}
+		</script>
+		<script id="commentTemplate1" type="text/html">
+			<li>
+					<div class="row comment-area">
+						<div class="col-md-1"><img src="images/user.jpeg" alt="" class="img-circle " width="35" height="35"></div>
+						<div class="col-md-10 comment-info">
+							<div class="col-md-12">{{i.user.nickname}}</div>
+							<div class="col-md-12">{{i.context}}</div>
+							<div class="col-md-12">
+								<div>
+									时间：<span>{{i.createDate}}</span>
+								</div>
+								<div>
+									<span>举报</span>
+									<span class="addzan"><i class="icon iconfont icon-zan" cid="{{i.id}}"></i>{{i.praise.length}}</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</li>
+		</script>
+		<script id="courseTemplate" type="text/html">
+			<div class="row teacher-msg">
+		 	<div class="col-md-12 course-title padding-30">推荐课程</div>
+		 </div>
+	     {{each list  i}}
+			<div class="row  recommd-course course-id"  cid="{{i.id}}">
+				<div class="col-md-4">
+					<img src="images/timg.jpg" alt="">
+				</div>
+				<div class="col-md-8">
+					<div><a>{{i.courseName}}</a></div>
+					<div>{{i.courseInfo}}</div>
+				</div>
+			</div>
+	      {{/each}}
+	</script>
+	</head>
+
+	<body>
+		<div class="wrap-cc">
+			<div class="content-cc">
+				<nav class="navbar navbar-default">
+					<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+						<ul class="nav navbar-nav">
+							<li><a href="front_index.html" class="vertical-middle"><i class="glyphicon glyphicon-menu-left"></i></a></li>
+							<li class="vertical-middle text-color"> 神经网络简介 </li>
+							<li class="vertical-middle little-title">1-1 01课程背景</li>
+						</ul>
+						<ul class="nav navbar-nav navbar-right">
+							<li class="dropdown">
+								<a href="#" class="dropdown-toggle user-active" data-toggle="dropdown" role="button">
+									<img class="img-circle" src="images/user.jpeg" id="userImg">
+									<span class="caret"></span>
+								</a>
+								<ul class="dropdown-menu userinfo cc">
+									<li>
+										<img src="images/user.jpeg" class="img-circle" alt="">
+										<div class="">
+											<p class="user-nickname">我叫细倩倩</p>
+											<p>金币<span class="user-gold">236</span>&nbsp;积分 <span class="user-point">0</span></p>
+										</div>
+									</li>
+									<li>
+										<a href="front_mycourse.html">
+											<i class="glyphicon glyphicon-edit"></i>我的课程
+										</a>
+										<a href="front_record.html">
+											<i class="glyphicon glyphicon-record"></i>积分记录
+										</a>
+									</li>
+									<li>
+										<a href="#" data-toggle="modal" data-target="#userSet">
+											<i class="glyphicon glyphicon-cog"></i>个人设置
+										</a>
+										<a id="loginOutBtn"><i class="glyphicon glyphicon-off"></i>退出登录</a>
+									</li>
+								</ul>
+							</li>
+						</ul>
+						<!-- /.navbar-collapse -->
+					</div>
+					<!-- /.container-fluid -->
+				</nav>
+				<div class="container-fluid padding-0 bgColor">
+					<video style="width: 100%; height:470px;" controls="controls" id="video-b">
+					</video>
+				</div>
+				<div class="container">
+					<div class="row">
+						<div class="col-md-9">
+							<ul class="title-ul">
+								<li class="current">评论</li>
+								<li>问答</li>
+								<li>笔记</li>
+							</ul>
+							<div class="row comment-area">
+								<div class="col-md-1"><img src="images/user.jpeg" alt="" class="img-circle " width="35" height="35"></div>
+								<div class="col-md-9">
+									<textarea cols="70" rows="10" style="resize:none;" name="context" id="context"></textarea>
+								</div>
+								<div class="col-md-2 col-md-offset-10 ">
+									<button class="btn btn-success">发表评论</button>
+								</div>
+							</div>
+							<ul id="comment" class="margin-bottom-90">
+								<li>
+									<div class="load-more">
+										<span>加载更多...</span>
+									</div>
+								</li>
+							</ul>
+						</div>
+						<div class="col-md-3" id="recommdcourse">
+							<div class="row teacher-msg">
+								<div class="col-md-12 course-title padding-30">推荐课程</div>
+							</div>
+							<div class="row recommd-course">
+								<div class="col-md-4">
+									<img src="images/timg.jpg" alt="">
+								</div>
+								<div class="col-md-8">
+									<div><a href="front_course.html">Fiddler</a></div>
+									<div>Fiddler是非常犀利的web调试工具，本课程全面讲解了Fiddle了</div>
+								</div>
+							</div>
+							<div class="row recommd-course">
+								<div class="col-md-4">
+									<img src="images/timg.jpg" alt="">
+								</div>
+								<div class="col-md-8">
+									<div><a href="front_course.html">Fiddler</a></div>
+									<div>Fiddler是非常犀利的web调试工具，本课程全面讲解了Fiddle了</div>
+								</div>
+							</div>
+							<div class="row recommd-course">
+								<div class="col-md-4">
+									<img src="images/timg.jpg" alt="">
+								</div>
+								<div class="col-md-8">
+									<div><a href="front_course.html">Fiddler</a></div>
+									<div>Fiddler是非常犀利的web调试工具，本课程全面讲解了Fiddle了</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="footer-cc">
+			<div class="footer">
+				<div>
+					版权所有： 南京网博
+				</div>
+				<div>
+					Copyright © 2017 imooc.com All Rights Reserved | 京ICP备 13046642号-2
+				</div>
+			</div>
+		</div>
+		<div class="modal fade" id="userSet" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+						<h4 class="modal-title" id="myModalLabel">个人信息</h4>
+					</div>
+					<form action="#" class="form-horizontal" method="post" id="updateForm">
+						<div class="modal-body">
+							<div class="form-group">
+								<label class="col-sm-3 control-label">旧密码：</label>
+								<div class="col-sm-6">
+									<input class="form-control" type="text" name="password" />
+									<input class="form-control loginName" type="hidden" name="loginName" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">新密码：</label>
+								<div class="col-sm-6">
+									<input class="form-control" type="password" name="newPassword" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">确认密码：</label>
+								<div class="col-sm-6">
+									<input class="form-control" type="password" name="rePassword" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">昵称：</label>
+								<div class="col-sm-6">
+									<input class="form-control nickname" type="text" name="nickname" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">邮箱：</label>
+								<div class="col-sm-6">
+									<input class="form-control email" type="text" name="email" />
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-info" data-dismiss="modal" aria-label="Close">关&nbsp;&nbsp;闭
+							</button>
+							<button type="reset" class="btn btn-info">重&nbsp;&nbsp;置</button>
+							<button type="button" class="btn btn-info" id="updateBtn">确&nbsp;&nbsp;定</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</body>
+
+</html>

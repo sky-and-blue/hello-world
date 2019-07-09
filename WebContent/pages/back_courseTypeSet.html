@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>课程类别管理</title>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="css/back-index.css" />
+    <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/template-web.js"></script>
+    <script src="js/bootstrap-paginator.js"></script>
+    <script src="js/bootstrap-mypaginator.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        $(function(){
+            init.find(1);
+            init.toAdd();
+
+            //返回父类别列表页面
+            $("#back").on("click", function() {
+                $('#frame-id', window.parent.document).attr('src', 'back_courseTypeSet.html');
+            });
+            //分页回调函数,点击按钮事件
+            myoptions.onPageClicked = function (event, originalEvent, type, page) {
+                //ajax回调接收数据成功时再重新初始化分页按钮
+                console.log("pageNo=", page);
+                init.find(page);
+            };
+        });
+
+
+        let parentId=null;
+        let init={
+            "toAdd":function () {
+                $("#doAddCourseType").on("click", function() {
+                    $("#courseType-id").attr("value",parentId)
+                    $("#courseType-id-input").hide();
+                    $("#courseTypeModal").modal("show");
+                });
+            },
+            "find":function (page,id) {
+                if(id != undefined){
+                    parentId=id;
+                }
+                $.ajax({
+                    url: "http://localhost:8080/netClass" + "/courseType/findBackCourseType.do",
+                    type: "POST",
+                    data:{
+                        'pageNo':page,
+                        'parentId':parentId
+                    },
+                    dataType: "json",
+                    success: function (data) {
+                        // alert(data.msg);
+                        if (data.success) {
+                            // console.log(data.obj);
+                            if(data.obj.pages==0){
+                                myPaginatorFun("myPages",data.obj.pageNum , 1);
+                            }else{
+                                myPaginatorFun("myPages",data.obj.pageNum , data.obj.pages);
+                            }
+                            let datas = {
+                                sources: data.obj.list
+                            };
+                            $("#tb").html(template("courseTypeTemplate", datas));
+                        } else {
+                            alert(data.msg);
+                        }
+                    }
+                });
+            },
+            "changeStatus": function (id, status) {
+                $.ajax({
+                    url: "http://localhost:8080/netClass" + "/courseType/updateStatus.do",
+                    type: "POST",
+                    data: {
+                        "id": id,
+                        "status": status
+                    },
+                    dataType: "json",
+                    success: function (data) {
+                        alert(data.msg);
+                        location.reload();
+                    }
+                });
+            },
+            "add":function () {
+                let typeName= $("#courseType-name").val();
+                if(typeName.trim()==''){
+                    alert('课程分类名不能为空');
+                    return ;
+                }
+                if(typeName.trim().length>18){
+                    alert('课程分类名太长');
+                    return ;
+                }
+
+                $.ajax({
+                    url: "http://localhost:8080/netClass" + "/courseType/add.do",
+                    type: "POST",
+                    data: {
+                        "parentId":$("#courseType-id").val() ,
+                        "typeName": $("#courseType-name").val()
+                    },
+                    dataType: "json",
+                    success: function (data) {
+                        alert(data.msg);
+                        if(data.success){
+                            location.reload();
+                        }
+                    }
+                });
+            }
+        }
+
+    </script>
+
+
+</head>
+
+<body>
+
+    <!-- 课程类别管理 -->
+    <div class="panel panel-default" id="departmentSet">
+        <div class="panel-heading">
+            <h3 class="panel-title">课程类别管理</h3>
+        </div>
+        <div class="panel-body">
+            <input type="button" value="添加课程类别" class="btn btn-primary" id="doAddCourseType" />
+            <!-- courseType父类别id,没有时,移除此按钮 -->
+            <input type="hidden" name="parent_id" value=""  />
+            <input type="button" value="返回上级列表" class="btn btn-success" id="back" style="float: right;" />
+            <br>
+            <br>
+            <div class="modal fade" tabindex="-1" id="courseTypeModal">
+                <!-- 窗口声明 -->
+                <div class="modal-dialog modal-lg">
+                    <!-- 内容声明 -->
+                    <div class="modal-content">
+                        <!-- 头部、主体、脚注 -->
+                        <div class="modal-header">
+                            <button class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">添加类别</h4>
+                        </div>
+                        <div class="modal-body text-center">
+                            <div class="row text-right" id="courseType-id-input" >
+                                <label for="courseType-id" class="col-sm-4 control-label">编号：</label>
+                                <div class="col-sm-4">
+                                    <input type="text" class="form-control" id="courseType-id" readonly="true" />
+                                </div>
+                            </div>
+                            <br>
+                            <div class="row text-right">
+                                <label for="courseType-name" class="col-sm-4 control-label">类别名称：</label>
+                                <div class="col-sm-4">
+                                    <input type="text" class="form-control" id="courseType-name" />
+                                </div>
+                            </div>
+                            <br>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-primary courseType-btn" onclick="init.add()">确定</button>
+                            <button class="btn btn-primary cancel" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="show-list">
+                <table class="table table-bordered table-hover" style='text-align: center;'>
+                    <thead>
+                        <tr class="text-danger">
+                            <th class="text-center">编号</th>
+                            <th class="text-center">名称</th>
+                            <th class="text-center">状态</th>
+                            <th class="text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tb">
+                        <script id="courseTypeTemplate" type="text/html">
+                            {{each sources as i value}}
+                            <tr>
+                                <td>{{value+1}}</td>
+                                <td>{{i.typeName}}</td>
+                                <td>
+                                    {{if i.status == 1}}
+                                    禁用
+                                    {{else}}
+                                    启用
+                                    {{/if}}
+
+                                </td>
+                                <td >
+                                    {{if i.status == 0}}
+                                    <input type="button" class="btn btn-danger btn-sm" value="禁用"
+                                           onclick="init.changeStatus('{{i.id}}','1')"/>
+                                    {{else}}
+                                    <input type="button" class="btn btn-success btn-sm" value="启用"
+                                           onclick="init.changeStatus('{{i.id}}','0')">
+                                    {{/if}}
+                                    <input type="button" class="btn btn-success btn-sm course-type-detail" value="查询子类别" onclick="init.find('1','{{i.id}}')"/>
+
+                                </td>
+                            </tr>
+                            {{/each}}
+                        </script>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            <div style="text-align: center;" >
+                <ul id="myPages" ></ul>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
