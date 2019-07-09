@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!-- 示例Mapper -->
+<mapper namespace="com.itany.netClass.dao.CourseTypeMapper">
+
+	<sql id="courseTypeColumn">
+		id,
+		type_name "typeName",
+		parent_id "parentId",
+		status
+	</sql>
+
+	<insert id="insertCourseType" parameterType="CourseType" >
+		insert into t_course_type
+		(type_name, parent_id, status)
+		values
+		(#{typeName}, #{parentId}, #{status})
+	</insert>
+
+	<select id="selectChildrenByParentId" parameterType="int" resultType="CourseType">
+		select
+		<include refid="courseTypeColumn"></include>
+		from t_course_type
+		<where>
+			<if test="parentId != null">
+				and parent_id = #{parentId}
+			</if>
+			<if test="parentId == null">
+				and parent_id is null
+			</if>
+		</where>
+	</select>
+	<select id="selectChildrenByParentIdAndStatus" parameterType="int" resultType="CourseType">
+		select
+		<include refid="courseTypeColumn"></include>
+		from t_course_type
+		<where>
+			<if test="parentId != null">
+				and parent_id = #{parentId}
+			</if>
+			<if test="parentId == null">
+				and parent_id is null
+			</if>
+			and status = 0
+		</where>
+	</select>
+
+	<select id="selectById" parameterType="int" resultType="CourseType">
+		select
+		<include refid="courseTypeColumn"></include>
+		from t_course_type
+		<where>
+			<if test="id != null">
+				and id = #{id}
+			</if>
+		</where>
+	</select>
+
+	<update id="update" parameterType="CourseType" >
+		update t_course_type
+		<set>
+			<if test="status != null">
+				status = #{status},
+			</if>
+		</set>
+		where id = #{id}
+	</update>
+
+	<select id="selectAll" resultType="CourseType">
+		select
+		<include refid="courseTypeColumn"></include>
+		from t_course_type
+	</select>
+</mapper>

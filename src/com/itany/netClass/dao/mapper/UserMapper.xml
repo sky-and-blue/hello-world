@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!-- 示例Mapper -->
+<mapper namespace="com.itany.netClass.dao.UserMapper">
+
+	<sql id="userColumn">
+		id,
+		login_name "loginName",
+		nickname,
+		password,
+		role,
+		email,
+		login_date "loginDate",
+		create_date "createDate",
+		status
+	</sql>
+
+	<!-- 使用Oracle触发器实现数值类型的主键的自增长 -->
+	<insert id="insert" parameterType="User">
+		insert into t_user
+		(login_name, nickname, password, role, email, login_date, create_date, status)
+		values
+		(#{loginName}, #{nickname}, #{password}, #{role}, #{email}, #{loginDate}, #{createDate}, #{status})
+	</insert>
+
+	<insert id="insertOracle1" parameterType="User" >
+		<selectKey keyProperty="id" order="AFTER" resultType="integer" >
+			select user_seq.currval from dual
+		</selectKey>
+		insert into t_user
+			(id,login_name,nickname,password,role,email,login_date,create_date,status)
+		values
+			(user_seq.nextval,#{loginName},#{nickname},#{password},#{role},#{email},#{loginDate,jdbcType=DATE},#{createDate},#{status})
+	</insert>
+	
+	<insert id="insertOracle2" parameterType="User" >
+		<selectKey keyProperty="id" order="BEFORE" resultType="integer" >
+			select user_seq.nextval from dual
+		</selectKey>
+		insert into t_user
+			(id,login_name,nickname,password,role,email,login_date,create_date,status)
+		values
+			(#{id},#{loginName},#{nickname},#{password},#{role},#{email},#{loginDate,jdbcType=DATE},#{createDate},#{status})
+	</insert>
+	
+	<update id="updateById" parameterType="User">
+		update t_user
+		<set>
+			<if test="nickname != null">
+				nickname = #{nickname},
+			</if>
+			<if test="password != null">
+				password = #{password},
+			</if>
+			<if test="loginDate != null">
+				login_date = #{loginDate},
+			</if>
+			<if test="role != null">
+				role = #{role},
+			</if>
+			<if test="status != null">
+				status = #{status},
+			</if>
+			<if test="email != null">
+				email = #{email},
+			</if>
+		</set>
+		where id = #{id}
+	</update>
+	<delete id="deleteById" >
+		delete from t_user where id = #{id}
+	</delete>
+
+	<select id="selectByCondition" parameterType="com.itany.netClass.vo.UserQuery"
+		resultType="User">
+		select
+		<include refid="userColumn"></include>
+		from t_user
+		<where>
+			<if test="loginNameLike != null">
+				and login_name like concat(concat('%', #{loginNameLike}), '%')
+			</if>
+			<if test="nicknameLike != null">
+				and nickname like concat(concat('%', #{nicknameLike}), '%')
+			</if>
+			<if test="emailLike != null">
+				and email like concat(concat('%', #{emailLike}), '%')
+			</if>
+			<if test="role != null and role!='-1'">
+				and role = #{role}
+			</if>
+			<if test="createDateBegin != null">
+				and create_date &gt;= #{createDateBegin}
+			</if>
+			<if test="createDateEnd != null">
+				and create_date &lt;= #{createDateEnd}
+			</if>
+			<if test="loginDateBegin != null">
+				and login_date &gt;= #{loginDateBegin}
+			</if>
+			<if test="loginDateBegin != null">
+				and login_date &lt;= #{loginDateBegin}
+			</if>
+		</where>
+	</select>
+
+	<select id="selectByLoginName" resultType="User" >
+		select
+		<include refid="userColumn"></include>
+		from t_user
+		where login_name = #{loginName}
+	</select>
+	<select id="selectByEmail" resultType="User" >
+		select
+		<include refid="userColumn"></include>
+		from t_user
+		where email = #{email}
+	</select>
+
+	<insert id="insertGoldPoints" parameterType="GoldPoints" >
+		insert into t_gold_points
+		(user_id, point_count, gold_count, info, create_date)
+		values
+		(#{userId}, #{pointCount}, #{goldCount}, #{info}, now())
+	</insert>
+
+
+	<select id="findById" parameterType="int" resultType="User">
+		select
+		<include refid="userColumn"></include>
+		from t_user
+		where id = #{id}
+	</select>
+
+</mapper>

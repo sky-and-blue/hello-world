@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.itany.netClass.dao.CourseMapper" >
+  <resultMap id="BaseResultMap" type="com.itany.netClass.entity.Course" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="course_name" property="courseName" jdbcType="VARCHAR" />
+    <result column="course_info" property="courseInfo" jdbcType="VARCHAR" />
+    <result column="author" property="author" jdbcType="VARCHAR" />
+    <result column="cover_image_url" property="coverImageUrl" jdbcType="VARCHAR" />
+    <result column="create_date" property="createDate" jdbcType="TIMESTAMP" />
+    <result column="click_number" property="clickNumber" jdbcType="INTEGER" />
+    <result column="status" property="status" jdbcType="INTEGER" />
+    <result column="recommendation_grade" property="recommendationGrade" jdbcType="INTEGER" />
+    <result column="course_type_id" property="courseTypeId" jdbcType="INTEGER" />
+  </resultMap>
+  <sql id="Example_Where_Clause" >
+    <where >
+      <foreach collection="oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause" >
+    <where >
+      <foreach collection="example.oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List" >
+    id, course_name, course_info, author, cover_image_url, create_date, click_number, 
+    status, recommendation_grade, course_type_id
+  </sql>
+  <select id="selectByExample" resultMap="BaseResultMap" parameterType="com.itany.netClass.entity.CourseExample" >
+    select
+    <if test="distinct" >
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from t_course
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null" >
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from t_course
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from t_course
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.itany.netClass.entity.CourseExample" >
+    delete from t_course
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.itany.netClass.entity.Course" >
+    insert into t_course (id, course_name, course_info, 
+      author, cover_image_url, create_date, 
+      click_number, status, recommendation_grade, 
+      course_type_id)
+    values (#{id,jdbcType=INTEGER}, #{courseName,jdbcType=VARCHAR}, #{courseInfo,jdbcType=VARCHAR}, 
+      #{author,jdbcType=VARCHAR}, #{coverImageUrl,jdbcType=VARCHAR}, #{createDate,jdbcType=TIMESTAMP}, 
+      #{clickNumber,jdbcType=INTEGER}, #{status,jdbcType=INTEGER}, #{recommendationGrade,jdbcType=INTEGER}, 
+      #{courseTypeId,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="com.itany.netClass.entity.Course" >
+    insert into t_course
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="courseName != null" >
+        course_name,
+      </if>
+      <if test="courseInfo != null" >
+        course_info,
+      </if>
+      <if test="author != null" >
+        author,
+      </if>
+      <if test="coverImageUrl != null" >
+        cover_image_url,
+      </if>
+      <if test="createDate != null" >
+        create_date,
+      </if>
+      <if test="clickNumber != null" >
+        click_number,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+      <if test="recommendationGrade != null" >
+        recommendation_grade,
+      </if>
+      <if test="courseTypeId != null" >
+        course_type_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="courseName != null" >
+        #{courseName,jdbcType=VARCHAR},
+      </if>
+      <if test="courseInfo != null" >
+        #{courseInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="author != null" >
+        #{author,jdbcType=VARCHAR},
+      </if>
+      <if test="coverImageUrl != null" >
+        #{coverImageUrl,jdbcType=VARCHAR},
+      </if>
+      <if test="createDate != null" >
+        #{createDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="clickNumber != null" >
+        #{clickNumber,jdbcType=INTEGER},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="recommendationGrade != null" >
+        #{recommendationGrade,jdbcType=INTEGER},
+      </if>
+      <if test="courseTypeId != null" >
+        #{courseTypeId,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.itany.netClass.entity.CourseExample" resultType="java.lang.Integer" >
+    select count(*) from t_course
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map" >
+    update t_course
+    <set >
+      <if test="record.id != null" >
+        id = #{record.id,jdbcType=INTEGER},
+      </if>
+      <if test="record.courseName != null" >
+        course_name = #{record.courseName,jdbcType=VARCHAR},
+      </if>
+      <if test="record.courseInfo != null" >
+        course_info = #{record.courseInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="record.author != null" >
+        author = #{record.author,jdbcType=VARCHAR},
+      </if>
+      <if test="record.coverImageUrl != null" >
+        cover_image_url = #{record.coverImageUrl,jdbcType=VARCHAR},
+      </if>
+      <if test="record.createDate != null" >
+        create_date = #{record.createDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.clickNumber != null" >
+        click_number = #{record.clickNumber,jdbcType=INTEGER},
+      </if>
+      <if test="record.status != null" >
+        status = #{record.status,jdbcType=INTEGER},
+      </if>
+      <if test="record.recommendationGrade != null" >
+        recommendation_grade = #{record.recommendationGrade,jdbcType=INTEGER},
+      </if>
+      <if test="record.courseTypeId != null" >
+        course_type_id = #{record.courseTypeId,jdbcType=INTEGER},
+      </if>
+    </set>
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map" >
+    update t_course
+    set id = #{record.id,jdbcType=INTEGER},
+      course_name = #{record.courseName,jdbcType=VARCHAR},
+      course_info = #{record.courseInfo,jdbcType=VARCHAR},
+      author = #{record.author,jdbcType=VARCHAR},
+      cover_image_url = #{record.coverImageUrl,jdbcType=VARCHAR},
+      create_date = #{record.createDate,jdbcType=TIMESTAMP},
+      click_number = #{record.clickNumber,jdbcType=INTEGER},
+      status = #{record.status,jdbcType=INTEGER},
+      recommendation_grade = #{record.recommendationGrade,jdbcType=INTEGER},
+      course_type_id = #{record.courseTypeId,jdbcType=INTEGER}
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.itany.netClass.entity.Course" >
+    update t_course
+    <set >
+      <if test="courseName != null" >
+        course_name = #{courseName,jdbcType=VARCHAR},
+      </if>
+      <if test="courseInfo != null" >
+        course_info = #{courseInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="author != null" >
+        author = #{author,jdbcType=VARCHAR},
+      </if>
+      <if test="coverImageUrl != null" >
+        cover_image_url = #{coverImageUrl,jdbcType=VARCHAR},
+      </if>
+      <if test="createDate != null" >
+        create_date = #{createDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="clickNumber != null" >
+        click_number = #{clickNumber,jdbcType=INTEGER},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="recommendationGrade != null" >
+        recommendation_grade = #{recommendationGrade,jdbcType=INTEGER},
+      </if>
+      <if test="courseTypeId != null" >
+        course_type_id = #{courseTypeId,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.itany.netClass.entity.Course" >
+    update t_course
+    set course_name = #{courseName,jdbcType=VARCHAR},
+      course_info = #{courseInfo,jdbcType=VARCHAR},
+      author = #{author,jdbcType=VARCHAR},
+      cover_image_url = #{coverImageUrl,jdbcType=VARCHAR},
+      create_date = #{createDate,jdbcType=TIMESTAMP},
+      click_number = #{clickNumber,jdbcType=INTEGER},
+      status = #{status,jdbcType=INTEGER},
+      recommendation_grade = #{recommendationGrade,jdbcType=INTEGER},
+      course_type_id = #{courseTypeId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+
+  <resultMap id="CourseAndTypeMap" type="com.itany.netClass.entity.Course">
+    <id column="id" property="id"></id>
+    <result column="course_name" property="courseName"></result>
+    <result column="author" property="author"></result>
+    <result column="cover_image_url" property="coverImageUrl"></result>
+    <result column="create_date" property="createDate"></result>
+    <result column="click_number" property="clickNumber"></result>
+    <result column="status" property="status"></result>
+    <result column="recommendation_grade" property="recommendationGrade"></result>
+    <result column="course_type_id" property="courseTypeId"></result>
+    
+    <association property="courseType" javaType="com.itany.netClass.entity.CourseType" >
+      <id column="course_type_id" property="id"></id>
+      <result column="type_name" property="typeName"></result>
+    </association>
+
+  </resultMap>
+  <select id="selectByCondition" parameterType="com.itany.netClass.vo.CourseQuery"
+          resultMap="CourseAndTypeMap">
+    SELECT
+    c.id,
+    course_name,
+    author,
+    cover_image_url,
+    create_date,
+    click_number,
+    recommendation_grade,
+    course_type_id,
+    c.status,
+    ct.type_name
+    FROM
+    t_course c
+    LEFT JOIN t_course_type ct ON course_type_id = ct.id
+    <where>
+      <if test="authorLike != null">
+        and author like concat(concat('%', #{authorLike}), '%')
+      </if>
+      <if test="courseNameLike != null">
+        and course_name like concat(concat('%', #{courseNameLike}), '%')
+      </if>
+      <if test="status != null and status != '-1' ">
+        and status = #{status}
+      </if>
+      <if test=" courseTypeId!= null and courseTypeId != '-1' ">
+        and course_type_id = #{courseTypeId}
+      </if>
+      <if test="createDateBegin != null">
+        and create_date &gt;= #{createDateBegin}
+      </if>
+      <if test="createDateEnd != null">
+        and create_date &lt;= #{createDateEnd}
+      </if>
+    </where>
+    order by c.id
+  </select>
+</mapper>
